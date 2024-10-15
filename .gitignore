@@ -1,2 +1,3 @@
 /target
-/inputs/*
+/inputs
+/AOC_OAUTH_KEY
