@@ -129,7 +129,7 @@ fn main() {
                                 conf.year as i32,
                                 12,
                                 day as u32,
-                                0, // midnight in the utc time zone
+                                0, // midnight in the utc-5 time zone
                                 0,
                                 2,
                             );
