@@ -1,6 +1,12 @@
 use colored::Colorize;
-use std::{thread::available_parallelism, time::Duration};
+use std::{
+    fs::{self, File},
+    io::Write,
+    thread::available_parallelism,
+    time::Duration,
+};
 
+use chrono::{self, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc};
 use clap::{Parser, Subcommand};
 mod day;
 
@@ -31,7 +37,7 @@ mod day8;
 mod day9;
 mod utils;
 
-use day::create_day;
+use day::{create_day, FETCH_CONFIG};
 use once_cell::sync::Lazy;
 
 #[derive(Parser)]
@@ -54,6 +60,16 @@ enum Commands {
         day: u32,
     },
     All,
+    SetFetchConfig {
+        #[arg(long, short)]
+        agent: String,
+
+        #[arg(long, short)]
+        oauthkey: String,
+
+        #[arg(long, short)]
+        year: u64,
+    },
 }
 
 fn main() {
@@ -101,15 +117,58 @@ fn main() {
             };
         }
         Commands::All => {
+            let current_time = Utc::now();
+            // let fetch_config = get_fetch_config();
             for (day, dayfun) in days.iter().enumerate() {
-                match (*dayfun)(args.verbose, args.skip_tests, (day + 1) as u32) {
-                    Ok(()) => {}
-                    Err(err) => {
-                        println!("{}", format!("error: {err}").red())
+                let day = day+1;
+                let runday = match Lazy::force(&FETCH_CONFIG) {
+                    Some(conf) => {
+                        let release_time = FixedOffset::east_opt(5 * 60 * 60)
+                            .unwrap()
+                            .with_ymd_and_hms(
+                                conf.year as i32,
+                                12,
+                                day as u32,
+                                0, // midnight in the utc time zone
+                                0,
+                                2,
+                            );
+
+                        current_time.naive_utc() > release_time.unwrap().naive_utc()
                     }
+                    None => true,
                 };
+
+                if runday {
+                    match (*dayfun)(args.verbose, args.skip_tests, day as u32) {
+                        Ok(()) => {}
+                        Err(err) => {
+                            println!("{}", format!("error: {err}").red())
+                        }
+                    }
+                }
             }
+        }
+        Commands::SetFetchConfig {
+            agent,
+            oauthkey,
+            year,
+        } => {
+            let mut file = File::create("AOC_FETCH_CONFIG").unwrap();
+            file.write_all(format!("{agent}\n{oauthkey}\n{year}").as_bytes())
+                .unwrap();
         }
     }
 }
 
+
+// let client = reqwest::Client::new();
+//                     let res = match client
+//                         .get(&self.aoc_url)
+//                         .header("Cookie", format!("session={};", &self.aoc_token))
+//                         .send()
+//                         .await
+//                     {
+//                         Ok(x) => x.text().await,
+//                         Err(x) => Err(x),
+//                     };
