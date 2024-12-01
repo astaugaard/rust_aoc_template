@@ -9,7 +9,7 @@ pub fn golden<'a, Input>(
     parent: &'a Lazy<Day<Input>>,
     expected_a: Option<&'a str>,
     expected_b: Option<&'a str>,
-) -> Box<dyn Fn(bool) -> Option<String> + 'a> {
+) -> Box<dyn Fn(bool) -> Option<String> + 'a + Send + Sync> {
     Box::new(move |verbose| {
         let input = match fs::read_to_string(format!("goldens/{}", file)) {
             Ok(a) => a,

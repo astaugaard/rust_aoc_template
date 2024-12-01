@@ -4,7 +4,7 @@ use once_cell::sync::Lazy;
 use reqwest::header::USER_AGENT;
 use std::{
     fs,
-    io::{Read, Write},
+    io::Read,
     path::Path,
     time::Instant,
 };
