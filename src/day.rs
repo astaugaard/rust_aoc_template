@@ -13,8 +13,6 @@ pub struct Day<A> {
     pub parser: Box<dyn Fn(String, bool) -> Result<A, String> + Sync + Send>,
     pub part_a: Box<dyn Fn(&A) -> Option<String> + Sync + Send>,
     pub part_b: Box<dyn Fn(&A) -> Option<String> + Sync + Send>,
-    pub tests: Vec<Box<dyn Fn(bool) -> Option<String> + Sync + Send>>,
-    pub ignore_failed_tests: bool,
 }
 
 pub struct FetchConfig {
@@ -39,18 +37,6 @@ fn get_fetch_config() -> Option<FetchConfig> {
         agent: agent.to_string(),
         oauthkey: oauthkey.to_string(),
     })
-}
-
-fn run_tests(
-    tests: &Vec<Box<dyn Fn(bool) -> Option<String> + Sync + Send>>,
-    verbose: bool,
-) -> Option<String> {
-    for i in tests {
-        if let Some(a) = (*i)(verbose) {
-            return Some(a);
-        };
-    }
-    None
 }
 
 fn get_day_input(day: u32) -> Result<String, String> {
@@ -97,7 +83,7 @@ fn get_day_input(day: u32) -> Result<String, String> {
     }
 }
 
-fn run_day<A>(day: &Day<A>, verbose: bool, skip_tests: bool, number: u32) -> Result<(), String>
+fn run_day<A>(day: &Day<A>, verbose: bool, number: u32) -> Result<(), String>
 where
     A: fmt::Debug,
 {
@@ -108,12 +94,6 @@ where
 
     // let file = fs::read_to_string(format!("inputs/day{}", number)).map_err(|e| format!("{e}"))?;
     let file = get_day_input(number)?;
-
-    if !skip_tests {
-        if let Some(err) = run_tests(&day.tests, verbose) {
-            println!("{}", format!("test failed: {}", err).red());
-        }
-    }
 
     let now = Instant::now();
 
@@ -136,12 +116,14 @@ where
         None => println!("not yet implemented"),
     }
 
+    println!("{}", "====== part B ======".bright_magenta());
+
     let now = Instant::now();
 
     match (*day.part_b)(&parsed) {
         Some(ret) => {
             println!("{}", ret);
-            println!("part a time: {:.2?}", now.elapsed());
+            println!("part b time: {:.2?}", now.elapsed());
         }
         None => println!("not yet implemented"),
     }
@@ -149,9 +131,9 @@ where
     Ok(())
 }
 
-pub fn create_day<A>(day: &'static Day<A>) -> Box<dyn Fn(bool, bool, u32) -> Result<(), String>>
+pub fn create_day<A>(day: &'static Day<A>) -> Box<dyn Fn(bool, u32) -> Result<(), String>>
 where
     A: fmt::Debug,
 {
-    Box::new(|verbose, skip_tests, num| run_day(day, verbose, skip_tests, num))
+    Box::new(|verbose, num| run_day(day, verbose, num))
 }

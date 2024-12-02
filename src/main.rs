@@ -1,12 +1,10 @@
 use colored::Colorize;
 use std::{
-    fs::{self, File},
+    fs::File,
     io::Write,
-    thread::available_parallelism,
-    time::Duration,
 };
 
-use chrono::{self, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc};
+use chrono::{self, FixedOffset, TimeZone, Utc};
 use clap::{Parser, Subcommand};
 mod day;
 
@@ -48,9 +46,6 @@ struct Cli {
 
     #[command(subcommand)]
     command: Commands,
-
-    #[arg(short, long, value_name = "SKIP_TESTS")]
-    skip_tests: bool,
 }
 
 #[derive(Subcommand, Clone)]
@@ -75,7 +70,7 @@ enum Commands {
 fn main() {
     let args = Cli::parse();
 
-    let days: [Box<dyn Fn(bool, bool, u32) -> Result<(), String>>; 25] = [
+    let days: [Box<dyn Fn(bool, u32) -> Result<(), String>>; 25] = [
         create_day(Lazy::force(&day1::DAY)),
         create_day(Lazy::force(&day2::DAY)),
         create_day(Lazy::force(&day3::DAY)),
@@ -109,7 +104,7 @@ fn main() {
 
     match args.command {
         Commands::Day { day } => {
-            match (*days[(day - 1) as usize])(args.verbose, args.skip_tests, day) {
+            match (*days[(day - 1) as usize])(args.verbose, day) {
                 Ok(()) => {}
                 Err(err) => {
                     println!("{}", format!("error: {err}").red())
@@ -129,7 +124,7 @@ fn main() {
                                 conf.year as i32,
                                 12,
                                 day as u32,
-                                0, // midnight in the utc-5 time zone
+                                0, // midnight in the utc time zone
                                 0,
                                 2,
                             );
@@ -140,7 +135,7 @@ fn main() {
                 };
 
                 if runday {
-                    match (*dayfun)(args.verbose, args.skip_tests, day as u32) {
+                    match (*dayfun)(args.verbose, day as u32) {
                         Ok(()) => {}
                         Err(err) => {
                             println!("{}", format!("error: {err}").red())
