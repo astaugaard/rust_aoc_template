@@ -118,7 +118,7 @@ fn main() {
                 let day = day+1;
                 let runday = match Lazy::force(&FETCH_CONFIG) {
                     Some(conf) => {
-                        let release_time = FixedOffset::east_opt(5 * 60 * 60)
+                        let release_time = FixedOffset::west_opt(5 * 60 * 60)
                             .unwrap()
                             .with_ymd_and_hms(
                                 conf.year as i32,
